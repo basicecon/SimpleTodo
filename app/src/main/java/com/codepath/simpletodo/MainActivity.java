@@ -1,5 +1,7 @@
 package com.codepath.simpletodo;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,12 +19,12 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "TODO";
+    private static final String TAG = "MainActivity";
 
     ArrayList<String> todoItems;
     ArrayAdapter<String> aTodoAdapter;
     ListView lvItems;
-    EditText etEditText;
+    EditText etNewItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         lvItems = (ListView) findViewById(R.id.lvItems);
         lvItems.setAdapter(aTodoAdapter);
 
-        etEditText = (EditText) findViewById(R.id.etNewItem);
+        etNewItem = (EditText) findViewById(R.id.etNewItem);
 
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -44,6 +46,30 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Intent intent = new Intent(MainActivity.this, EditItemActivity.class);
+                intent.putExtra(EditItemActivity.L_TASK_INDEX, "" + position);
+                intent.putExtra(EditItemActivity.L_TASK_NAME, todoItems.get(position));
+                startActivityForResult(intent, 1);
+            }
+        });
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                int taskIndex = new Integer(data.getStringExtra(EditItemActivity.L_TASK_INDEX));
+                String newTask = data.getStringExtra(EditItemActivity.L_TASK_NAME);
+                todoItems.set(taskIndex, newTask);
+                aTodoAdapter.notifyDataSetChanged();
+                writeItems();
+            }
+        }
     }
 
     public void populateArrayItems() {
@@ -77,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onAddItem(View view) {
-        aTodoAdapter.add(etEditText.getText().toString());
-        etEditText.setText("");
+        aTodoAdapter.add(etNewItem.getText().toString());
+        etNewItem.setText("");
         writeItems();
     }
 }
